@@ -32,14 +32,22 @@ public class UserService {
 
     public User updateUser(Long id, User userDetails) {
         return userRepository.findById(id).map(user -> {
+            String newEmail = userDetails.getEmail();
+            if (newEmail != null && !newEmail.equalsIgnoreCase(user.getEmail())) {
+                userRepository.findByEmail(newEmail)
+                        .filter(existing -> !existing.getId().equals(user.getId()))
+                        .ifPresent(existing -> {
+                            throw new IllegalArgumentException("Email already in use");
+                        });
+            }
             user.setFirstName(userDetails.getFirstName());
             user.setLastName(userDetails.getLastName());
-            user.setEmail(userDetails.getEmail());
+            user.setEmail(newEmail);
             user.setAge(userDetails.getAge());
             user.setAddress(userDetails.getAddress());
             user.setJoiningDate(userDetails.getJoiningDate());
             return userRepository.save(user);
-        }).orElseThrow(() -> new RuntimeException("User not found with id " + id));
+        }).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     public boolean emailExists(String email) {
