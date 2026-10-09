@@ -4,6 +4,7 @@ import com.example.userservice.model.User;
 import com.example.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,11 +21,16 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
+        user.setId(null);
         if (userService.emailExists(user.getEmail())) {
-            return new ResponseEntity<>("Email already in use", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("This email is already registered.", HttpStatus.BAD_REQUEST);
         }
-        User newUser = userService.saveUser(user);
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        try {
+            User newUser = userService.saveUser(user);
+            return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        } catch (DataIntegrityViolationException ex) {
+            return new ResponseEntity<>("This email is already registered.", HttpStatus.CONFLICT);
+        }
     }
 
     @GetMapping
@@ -41,9 +47,12 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody User userDetails) {
+        userDetails.setId(null);
         try {
             User updatedUser = userService.updateUser(id, userDetails);
             return ResponseEntity.ok(updatedUser);
+        } catch (DataIntegrityViolationException ex) {
+            return new ResponseEntity<>("This email is already registered.", HttpStatus.CONFLICT);
         } catch (RuntimeException ex) {
             return ResponseEntity.notFound().build();
         }
