@@ -20,11 +20,10 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        if (userService.emailExists(user.getEmail())) {
-            return new ResponseEntity<>("Email already in use", HttpStatus.BAD_REQUEST);
+        if (!userService.emailExists(user.getEmail())) {
+            userService.saveUser(user);
         }
-        User newUser = userService.saveUser(user);
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        return new ResponseEntity<>("Check your inbox to continue", HttpStatus.ACCEPTED);
     }
 
     @GetMapping
