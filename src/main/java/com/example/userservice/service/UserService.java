@@ -37,7 +37,6 @@ public class UserService {
             user.setEmail(userDetails.getEmail());
             user.setAge(userDetails.getAge());
             user.setAddress(userDetails.getAddress());
-            user.setJoiningDate(userDetails.getJoiningDate());
             return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("User not found with id " + id));
     }
